@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Mapbox GL JS map</title>
+<meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no">
+<link href="https://api.mapbox.com/mapbox-gl-js/v3.5.1/mapbox-gl.css" rel="stylesheet">
+<script src="https://api.mapbox.com/mapbox-gl-js/v3.5.1/mapbox-gl.js"></script>
+
+<style>
+    body {
+        margin: 0;
+        padding: 0;
+    }
+
+    #map {
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        right: 0;
+        width: 80%;
+        z-index: 1;
+    }
+
+    #sidepanel {
+        position: absolute;
+        z-index: 2;
+        top: 0;
+        bottom: 0;
+        left: 0;
+        width: 20%;
+        outline: 1px solid black;
+    }
+
+    #navContainer {
+        display: flex;
+        justify-content: space-around;
+        align-items: center;
+        background-color: lightgray; /* Default background color */
+    }
+
+    #navContainer div {
+        display: flex;
+        justify-content: space-around;
+        cursor: pointer;
+        padding: 10px;
+        align-items: center;
+        width: 50%;
+        height: 100%;
+    }
+
+    #navContainer img {
+        width: 40px;
+        height: 40px;
+    }
+
+    /* Apply steelblue background color when clicked */
+    #navContainer div.active {
+        background-color: rgb(0, 153, 255);
+    }
+
+    .line {
+        width: 100%;
+        height: 1px;
+        background-color: black;
+    }
+
+    #searchboxContainer {
+        display: flex;
+        align-items: center;
+        padding: 10px;
+        background-color: #f1f1f1;
+        border-top: 1px solid #ddd;
+    }
+
+    /* Styling for the search box icon */
+    #searchboxContainer img {
+        width: 30px;
+        height: 30px;
+        margin-right: 10px;
+    }
+
+    /* Styling for the search box input */
+    #searchboxContainer input {
+        width: calc(100% - 30px); /* Adjust width according to the icon size */
+        padding: 8px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        font-size: 16px;
+    }
+
+    #searchboxContainer input:focus {
+        outline: none;
+        border-color: #888;
+    }
+
+    #btmContainer {
+        position: absolute;
+        display: flex;
+        justify-content: space-between;
+        background-color: #e0e0e0;
+        border-top: 1px solid #000000;
+        bottom: 0;
+        width: 100%;
+    }
+
+    #btmContainer #resort {
+        width: 50%;
+        text-align: center;
+        font-size: 16px;
+        border-right: 1px solid #000000;
+    }
+    #btmContainer #loads {
+        width: 50%;
+        text-align: center;
+        font-size: 16px;
+    }
+
+</style>
+
+</head>
+
+<body>
+
+<div id="map"></div>
+<div id="sidepanel">
+
+    <div id="navContainer">
+        <div id="directionsBtn">
+            <img src="https://cdn-icons-png.flaticon.com/512/61/61021.png" alt="Directions">
+        </div>
+        <div id="infoBtn">
+            <img src="https://cdn-icons-png.flaticon.com/512/786/786024.png" alt="Information">
+        </div>
+    </div>
+
+    <div class="line"></div>
+
+    <div id="searchboxContainer">
+        <img src="https://cdn-icons-png.flaticon.com/128/149/149852.png" alt="si">
+        <input type="text" placeholder="Search">
+    </div>
+
+    <div id="results"></div>
+    
+    <div id="btmContainer">
+        <div id="resort">Portes du Soleil</div>
+        <div id="loads"></div>
+    </div>
+
+</div>
+
+<script>
+    async function fetchSync(url) {
+        const response = await fetch(url);
+        const json = await response.json();
+        return json;
+    }
+
+    async function getDirections(stops) {
+        let response = await fetch('/directions', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({'request': stops})
+        });
+        const json = await response.json();
+        return json.result;
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        async function main() {
+            mapboxgl.accessToken = 'pk.eyJ1IjoiZ29hdGNhdHMiLCJhIjoiY2x6YTAyZDkyMGEzbDJyczh5OHU0bXYyMCJ9.MvC-TVdfjR1JKwiZcyJ9Gw';
+            const map = new mapboxgl.Map({
+                container: 'map', // container ID
+                style: 'mapbox://styles/goatcats/clzbp5wye008a01r32cqahlbf',
+                center: [6.771054,46.193676], // starting position [lng, lat]. Note that lat must be set between -90 and 90
+                zoom: 13 // starting zoom
+            });
+            const mapLoads = await fetchSync('/load');
+            document.getElementById('loads').innerText = mapLoads.loads;
+
+            const directionsBtn = document.getElementById('directionsBtn');
+            const infoBtn = document.getElementById('infoBtn');
+
+            let nodes_json, slopes_json, lifts_json;
+
+            let infoSelected = true;
+            infoBtn.classList.add('active');
+
+            directionsBtn.addEventListener('click', async () => {
+                directionsBtn.classList.add('active');
+                infoBtn.classList.remove('active');
+                infoSelected = false;
+                // start directions
+                const result = await getDirections(['zore-1', 'proclou-1', 'zore-1']);
+                console.log(result);
+                let highlightedFeatures = [];
+                let counter = 0;
+                result.steps.forEach(step => {
+                    if (step.type === "node") {
+                        nodes_json.features.forEach(feature => {
+                            if (feature.properties.id === step.name) {
+                                if (counter === 0) {
+                                    const marker1 = new mapboxgl.Marker({color: 'green'})
+                                        .setLngLat(feature.properties.point)
+                                        .addTo(map);
+                                } else if (counter === result.steps.length-1) {
+                                    const marker1 = new mapboxgl.Marker({color: 'red'})
+                                        .setLngLat(feature.properties.point)
+                                        .addTo(map);
+                                } else {
+                                    const marker1 = new mapboxgl.Marker()
+                                        .setLngLat(feature.properties.point)
+                                        .addTo(map);
+                                }
+                            }
+                        });
+                    } else if (step.type === "slope") {
+                        slopes_json.features.forEach(feature => {
+                            if (feature.properties.id === step.name) {
+                                highlightedFeatures.push(feature);
+                            }
+                        });
+                    } else {
+                        lifts_json.features.forEach(feature => {
+                            if (feature.properties.name === step.name) {
+                                highlightedFeatures.push(feature);
+                            }
+                        });
+                    }
+                    counter++;
+                });
+                map.getSource('highlight-line').setData({
+                    type: 'FeatureCollection',
+                    features: highlightedFeatures
+                });
+                // end directions
+            });
+
+            infoBtn.addEventListener('click', () => {
+                infoBtn.classList.add('active');
+                directionsBtn.classList.remove('active');
+                infoSelected = true
+            });
+            
+
+            // load 3d terrain
+            map.on('style.load', () => {
+                map.addSource('mapbox-dem', {
+                    'type': 'raster-dem',
+                    'url': 'mapbox://mapbox.mapbox-terrain-dem-v1',
+                    'tileSize': 512,
+                    'maxzoom': 14
+                });
+                // add the DEM source as a terrain layer with exaggerated height
+                map.setTerrain({ 'source': 'mapbox-dem', 'exaggeration': 1.5 });
+            });
+
+            map.on('load', async () => {
+                map.setFog({});
+
+                lifts_json = await fetchSync('/lifts');
+                slopes_json = await fetchSync('/slopes');
+                nodes_json = await fetchSync('/nodes');
+
+                // add sources
+                map.addSource('lifts', {
+                    type: 'geojson',
+                    data: lifts_json
+                });
+                map.addSource('slopes', {
+                    type: 'geojson',
+                    data: slopes_json
+                });
+                map.addSource('nodes', {
+                    type: 'geojson',
+                    data: nodes_json
+                });
+
+                // add slopes layers
+                map.addLayer({
+                    id: 'highlight-line',
+                    type: 'line',
+                    source: {
+                        type: 'geojson',
+                        data: {
+                            type: 'FeatureCollection',
+                            features: []
+                        }
+                    },
+                    layout: {
+                        'line-join': 'round',
+                    },
+                    paint: {
+                        'line-color': 'orange',
+                        'line-width': [
+                            'interpolate', 
+                            ['linear'], 
+                            ['zoom'],
+                            10, 6,
+                            12, 7, 
+                            14, 8.5,
+                            16, 10
+                        ],
+                    }
+                });
+
+                map.addLayer({
+                    id: 'geometry-slopes',
+                    type: 'line',
+                    source: 'slopes',
+                    layout: {
+                        'line-join': 'round',
+                    },
+                    paint: {
+                        'line-color': [
+                            'match',
+                            ['get', 'difficulty'],
+                            'very easy', 'green',
+                            'easy', 'blue',
+                            'intermediate', 'red',
+                            'expert', 'black',
+                            'yellow'
+                        ],
+                        'line-width': [
+                            'interpolate', 
+                            ['linear'], 
+                            ['zoom'],
+                            10, 1,
+                            12, 2, 
+                            14, 3.5,
+                            16, 5
+                        ],
+                    }
+                });
+                map.addLayer({
+                    id: 'labels-slopes',
+                    type: 'symbol',
+                    source: 'slopes',
+                    layout: {
+                        'symbol-placement': 'line-center',
+                        'text-pitch-alignment': 'viewport',
+                        'text-field': ["get", "slope-name"],
+                    },
+                    paint: {
+                        'text-color': [
+                            'match',
+                            ['get', 'difficulty'],
+                            'very easy', 'green',
+                            'easy', 'blue',
+                            'intermediate', 'red',
+                            'expert', 'black',
+                            'yellow'
+                        ],
+                        'text-size': 14,
+                        'text-halo-width': 2,
+                        'text-halo-color': '#ffffff'
+                    },
+                    minzoom: 16
+                });
+
+                // add lifts layers
+                map.addLayer({
+                    id: 'geometry-lifts',
+                    type: 'line',
+                    source: 'lifts',
+                    layout: {
+                        'line-cap': 'round',
+                        'line-join': 'round',
+                    },
+                    paint: {
+                        'line-color': '#575757',
+                        'line-width': [
+                            'interpolate', 
+                            ['linear'], 
+                            ['zoom'],
+                            10, 2, 
+                            14, 3
+                        ],
+                        'line-dasharray': [3,1.5]
+                    }
+                });
+                map.addLayer({
+                    id: 'labels-lifts',
+                    type: 'symbol',
+                    source: 'lifts',
+                    layout: {
+                        'symbol-placement': 'line-center',
+                        'text-pitch-alignment': 'viewport',
+                        'text-field': ["get", "name"],
+                    },
+                    paint: {
+                        'text-color': '#575757',
+                        'text-size': 14,
+                        'text-halo-width': 1.5,
+                        'text-halo-color': '#ffffff'
+                    },
+                    minzoom: 14.5
+                });
+
+                // add nodes layers
+                map.addLayer({
+                    id: 'fill-nodes',
+                    type: 'fill',
+                    source: 'nodes',
+                    paint: {
+                        'fill-color': 'orange',
+                        'fill-opacity': 0.4
+                    }
+                });
+                map.addLayer({
+                    id: 'geometry-nodes',
+                    type: 'line',
+                    source: 'nodes',
+                    layout: {
+                        'line-join': 'round',
+                    },
+                    paint: {
+                        'line-color': 'orange',
+                        'line-width': [
+                            'interpolate', 
+                            ['linear'], 
+                            ['zoom'],
+                            10, 1,
+                            12, 2, 
+                            14, 3.5,
+                            16, 5
+                        ],
+                    }
+                });
+                
+
+                // mouse pointer when on slope or lift
+                map.on('mouseenter', 'geometry-lifts', () => {
+                    map.getCanvas().style.cursor = "pointer";
+                });
+                map.on('mouseleave', 'geometry-lifts', () => {
+                    map.getCanvas().style.cursor = ''
+                });
+                map.on('mouseenter', 'geometry-slopes', () => {
+                    map.getCanvas().style.cursor = "pointer";
+                });
+                map.on('mouseleave', 'geometry-slopes', () => {
+                    map.getCanvas().style.cursor = ''
+                });
+
+                // detect click on feature
+                map.on('click', (e) => {
+                    if (infoSelected) {
+                        const resultsBox = document.getElementById('results');
+                        const feature = map.queryRenderedFeatures(e.point, {
+                            layers: ['fill-nodes', 'geometry-lifts', 'geometry-slopes']
+                        })[0];
+                        if (!feature) { // nothing
+                            console.log('Nothing was selected');
+
+                        } else if (feature.layer.source === 'nodes') { // nodes
+                            console.log('You selected the node '+feature.properties.id+' in '+feature.properties.resort);
+
+                        } else if (feature.layer.source === 'slopes') { // slope
+                            let featuresOfSlope = [];
+                            
+                            let slopeStats = {
+                                name: feature.properties['slope-name'],
+                                resort: feature.properties.resort,
+                                difficulty: feature.properties.difficulty,
+                                len: 0
+                            };
+                            // add up slope length
+                            for (let i=0; i<slopes_json.features.length; i++) {
+                                let currentSegment = slopes_json.features[i].properties;
+                                if (currentSegment['slope-name'] === feature.properties['slope-name']) {
+                                    featuresOfSlope.push(slopes_json.features[i]);
+                                    slopeStats.len += currentSegment.len;
+                                    slopeStats.len = Math.round(slopeStats.len * 100) / 100;
+                                }
+                            }
+                            resultsBox.innerHTML = `<div>${JSON.stringify(slopeStats, null, 4)}</div>`;
+                            map.getSource('highlight-line').setData({
+                                type: 'FeatureCollection',
+                                features: featuresOfSlope
+                            });
+
+                        } else if (feature.layer.source === 'lifts') { // lifts
+                            let liftStats = {
+                                name: feature.properties.name,
+                                resort: feature.properties.resort,
+                                type: feature.properties.type,
+                                capacity: feature.properties.capacity,
+                                len: feature.properties.len
+                            };
+                            resultsBox.innerHTML = `<div>${JSON.stringify(liftStats, null, 4)}</div>`;
+                            for (let i=0; i<lifts_json.features.length; i++) {
+                                if (lifts_json.features[i].properties.name === feature.properties.name) {
+                                    map.getSource('highlight-line').setData({
+                                        type: 'FeatureCollection',
+                                        features: [lifts_json.features[i]]
+                                    });
+                                }
+                            }
+                        }
+                    }
+                });
+
+            });
+        }
+        main();
+    });
+    
+</script>
+
+</body>
+
+</html>

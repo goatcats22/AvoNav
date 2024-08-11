@@ -1,0 +1,98 @@
+{
+    "type": "FeatureCollection",
+    "features": [
+        {
+            "type": "Feature",
+            "geometry": {
+                "type": "LineString",
+                "coordinates": [
+                    [6.739039, 46.198831],
+                    [6.741574, 46.198169],
+                    [6.744263, 46.19747],
+                    [6.748495, 46.196365],
+                    [6.751127, 46.195673]
+                ]
+            },
+            "properties": {
+                "name": "Séraussaix",
+                "type": "chair lift",
+                "capacity": 6,
+                "len": 0.99,
+                "resort": "Avoriaz"
+            },
+            "id": 0
+        },
+        {
+            "type": "Feature",
+            "geometry": {
+                "type": "LineString",
+                "coordinates": [
+                    [6.73456, 46.195872],
+                    [6.735798, 46.195671],
+                    [6.737275, 46.195431],
+                    [6.738537, 46.195226],
+                    [6.739696, 46.195038]
+                ]
+            },
+            "properties": {
+                "name": "Baron",
+                "type": "button lift",
+                "capacity": 1,
+                "len": 0.41,
+                "resort": "Avoriaz"
+            },
+            "id": 1
+        },
+        {
+            "type": "Feature",
+            "geometry": {
+                "type": "LineString",
+                "coordinates": [
+                    [6.718512, 46.190524],
+                    [6.720215, 46.19124],
+                    [6.721898, 46.191947],
+                    [6.723408, 46.192581],
+                    [6.727087, 46.194128],
+                    [6.729752, 46.195248],
+                    [6.732022, 46.196203]
+                ]
+            },
+            "properties": {
+                "name": "Zore",
+                "type": "chair lift",
+                "capacity": 4,
+                "len": 1.25,
+                "resort": "Avoriaz"
+            },
+            "id": 2
+        },
+        {
+            "type": "Feature",
+            "geometry": {
+                "type": "LineString",
+                "coordinates": [
+                    [6.703586, 46.183571],
+                    [6.70484, 46.184226],
+                    [6.706424, 46.185063],
+                    [6.707482, 46.185623],
+                    [6.708255, 46.186031],
+                    [6.709185, 46.186521],
+                    [6.710254, 46.187088],
+                    [6.711228, 46.187605],
+                    [6.712352, 46.188193],
+                    [6.713768, 46.188939],
+                    [6.715311, 46.189759],
+                    [6.717416, 46.190876]
+                ]
+            },
+            "properties": {
+                "name": "Super Morzine",
+                "type": "gondola",
+                "capacity": 6,
+                "len": 1.39,
+                "resort": "Avoriaz"
+            },
+            "id": 3
+        }
+    ]
+}
