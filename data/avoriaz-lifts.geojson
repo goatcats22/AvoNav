@@ -93,6 +93,92 @@
                 "resort": "Avoriaz"
             },
             "id": 3
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "name": "Chapelle",
+                "type": "button lift",
+                "capacity": 1,
+                "len": 0.29,
+                "resort": "Avoriaz"
+            },
+            "geometry": {
+                "type": "LineString",
+                "coordinates": [
+                    [6.768886, 46.19624],
+                    [6.769968, 46.196361],
+                    [6.772503, 46.197051]
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "name": "Écoles 2",
+                "type": "button lift",
+                "capacity": 1,
+                "len": 0.23,
+                "resort": "Avoriaz"
+            },
+            "geometry": {
+                "type": "LineString",
+                "coordinates": [
+                    [6.77024, 46.194595],
+                    [6.772404, 46.196003]
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "name": "Écoles 1",
+                "type": "button lift",
+                "capacity": 1,
+                "len": 0.23,
+                "resort": "Avoriaz"
+            },
+            "geometry": {
+                "type": "LineString",
+                "coordinates": [
+                    [6.770332, 46.194537],
+                    [6.772473, 46.195952]
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "name": "Trashers",
+                "type": "button lift",
+                "capacity": 1,
+                "len": 0.17,
+                "resort": "Avoriaz"
+            },
+            "geometry": {
+                "type": "LineString",
+                "coordinates": [
+                    [6.767891, 46.192317],
+                    [6.769745, 46.191435]
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "name": "Proclou",
+                "type": "chair lift",
+                "capacity": 6,
+                "len": 1.58,
+                "resort": "Avoriaz"
+            },
+            "geometry": {
+                "type": "LineString",
+                "coordinates": [
+                    [6.752266, 46.195193],
+                    [6.772677, 46.196442]
+                ]
+            }
         }
     ]
 }
