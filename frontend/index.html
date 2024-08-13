@@ -194,9 +194,10 @@
                 infoBtn.classList.remove('active');
                 infoSelected = false;
                 // start directions
-                const result = await getDirections(['proclou-2', 'zore-1']);
+                const result = await getDirections(['proclou-2', 'zore-2', 'proclou-5']);
                 console.log(result);
                 let highlightedFeatures = [];
+                let arrowedFeatures = [];
                 let counter = 0;
                 result.steps.forEach(step => {
                     if (step.type === "node") {
@@ -221,6 +222,7 @@
                         slopes_json.features.forEach(feature => {
                             if (feature.properties.id === step.name) {
                                 highlightedFeatures.push(feature);
+                                arrowedFeatures.push(feature);
                             }
                         });
                     } else {
@@ -235,6 +237,10 @@
                 map.getSource('highlight-line').setData({
                     type: 'FeatureCollection',
                     features: highlightedFeatures
+                });
+                map.getSource('arrows').setData({
+                    type: 'FeatureCollection',
+                    features: arrowedFeatures
                 });
                 // end directions
             });
@@ -305,6 +311,30 @@
                             16, 10
                         ],
                     }
+                });
+
+                const url = 'https://cdn-icons-png.flaticon.com/128/271/271228.png';
+                map.loadImage(url, (err, image) => {
+                    if (err) return;
+                    map.addImage('arrow', image);
+                    map.addLayer({
+                        id: 'arrows',
+                        type: 'symbol',
+                        source: {
+                            type: 'geojson',
+                            data: {
+                                type: 'FeatureCollection',
+                                features: []
+                            }
+                        },
+                        layout: {
+                            'symbol-placement': 'line',
+                            'symbol-spacing': 1,
+                            'icon-image': 'arrow',
+                            'icon-size': 0.11,
+                        },
+                        minzoom: 14
+                    });
                 });
 
                 map.addLayer({
@@ -482,6 +512,10 @@
                                 type: 'FeatureCollection',
                                 features: featuresOfSlope
                             });
+                            map.getSource('arrows').setData({
+                                type: 'FeatureCollection',
+                                features: featuresOfSlope
+                            });
 
                         } else if (feature.layer.source === 'lifts') { // lifts
                             let liftStats = {
@@ -497,6 +531,10 @@
                                     map.getSource('highlight-line').setData({
                                         type: 'FeatureCollection',
                                         features: [lifts_json.features[i]]
+                                    });
+                                    map.getSource('arrows').setData({
+                                        type: 'FeatureCollection',
+                                        features: []
                                     });
                                 }
                             }
